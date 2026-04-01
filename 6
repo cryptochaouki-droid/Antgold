@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AntGold — Stake & Earn | Colonie Solana</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #0d0812;
+    --surface: #160d20;
+    --border: #2e1a45;
+    --gold: #f0c040;
+    --gold2: #ffd97d;
+    --gold3: #ffe9a8;
+    --mauve: #c084fc;
+    --mauve2: #e9d5ff;
+    --text: #f5eeff;
+    --muted: #7c6a9a;
+    --glow-g: 0 0 40px rgba(240,192,64,0.25);
+    --glow-m: 0 0 40px rgba(192,132,252,0.2);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* custom cursor */
+  #cur, #cur2 {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    border-radius: 50%;
+  }
+  #cur {
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    mix-blend-mode: difference;
+    transition: transform 0.05s linear;
+  }
+  #cur2 {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--gold);
+    opacity: 0.4;
+    transition: all 0.1s ease;
+  }
+
+  /* background orbs */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 20%, rgba(192,132,252,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 80%, rgba(240,192,64,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* floating particles */
+  .particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .p {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-20px) rotate(720deg); opacity: 0; }
+  }
+
+  /* navigation */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 3rem;
+    background: rgba(13,8,18,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(240,192,64,0.5);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .logo img {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+  }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  nav a:hover {
+    color: var(--gold);
+  }
+  .nav-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0d0812;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover {
+    box-shadow: var(--glow-g);
+    transform: translateY(-1px);
+  }
+
+  /* hero */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+  }
+  .hero-tag {
+    font-size: 0.7rem;
+    color: var(--mauve);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .hero-tag::before,
+  .hero-tag::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--mauve));
+  }
+  .hero-tag::after {
+    background: linear-gradient(90deg, var(--mauve), transparent);
+  }
+  .hero-icon {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    filter: drop-shadow(0 0 30px rgba(240,192,64,0.7));
+    animation: antFloat 3s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  @keyframes antFloat {
+    0%,100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-15px) rotate(2deg); }
+  }
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  h1 .g {
+    background: linear-gradient(135deg, var(--gold), var(--gold2), var(--gold3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 550px;
+    line-height: 1.7;
+    margin: 1.5rem auto 2.5rem;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0d0812;
+    border: none;
+    padding: 0.9rem 2.2rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-gold:hover {
+    box-shadow: var(--glow-g);
+    transform: translateY(-2px);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--gold2);
+    border: 1px solid var(--border);
+    padding: 0.9rem 2.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-ghost:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* stats */
+  .stats {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat {
+    padding: 2rem 1rem;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-v {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+  .stat-l {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 4rem;
+  }
+  .s-tag {
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--text), var(--mauve2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* tiers */
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .tier {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .tier::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+  .tier:hover {
+    transform: translateY(-5px);
+    border-color: rgba(240,192,64,0.4);
+    box-shadow: var(--glow-g);
+  }
+  .tier:hover::before {
+    transform: scaleX(1);
+  }
+  .tier.best {
+    border-color: rgba(240,192,64,0.5);
+    background: linear-gradient(135deg, rgba(240,192,64,0.05), var(--surface));
+  }
+  .tier-badge {
+    font-size: 0.6rem;
+    background: var(--gold);
+    color: #0d0812;
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+  .tier-dur {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .tier-mult {
+    font-family: 'Cinzel', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+  .tier-earn {
+    font-size: 0.85rem;
+    color: var(--mauve);
+    margin: 0.8rem 0;
+    font-weight: 500;
+  }
+  .tier-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* steps */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 4rem;
+    counter-reset: step;
+  }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    counter-increment: step;
+  }
+  .step::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: 'Cinzel', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    color: rgba(240,192,64,0.1);
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    line-height: 1;
+  }
+  .step-icon {
+    font-size: 2.2rem;
+    margin-bottom: 0.8rem;
+  }
+  .step h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin-bottom: 0.7rem;
+  }
+  .step p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* app & calculator */
+  .app-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .app-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin-top: 2.5rem;
+  }
+  .app-card {
+    background: rgba(240,192,64,0.04);
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 20px;
+    padding: 2rem;
+  }
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+  .input-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .input-field {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .input-field:focus {
+    border-color: var(--gold);
+  }
+  .calc-result {
+    background: rgba(240,192,64,0.06);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(240,192,64,0.1);
+    font-size: 0.8rem;
+  }
+  .calc-val.big {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    color: var(--gold2);
+  }
+
+  /* tokenomics */
+  .tknomics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin-top: 3rem;
+  }
+  .tknomics-list {
+    list-style: none;
+  }
+  .tknomics-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+  .tknomics-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* security grid */
+  .security-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .security-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.8rem;
+    text-align: center;
+  }
+
+  /* faq */
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+  .faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.2rem 1.5rem;
+    text-align: left;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .faq-answer {
+    display: none;
+    padding: 0 1.5rem 1.2rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* roadmap */
+  .roadmap-line {
+    position: relative;
+    margin-top: 2.5rem;
+  }
+  .roadmap-item {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 0;
+  }
+
+  footer {
+    padding: 2.5rem 4rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 900px) {
+    nav ul { display: none; }
+    section { padding: 4rem 1.5rem; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .tiers, .steps, .security-grid { grid-template-columns: 1fr; }
+    .app-grid, .tknomics { grid-template-columns: 1fr; }
+    .hero { padding-top: 6rem; }
+    footer { padding: 1.5rem; flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur2"></div>
+<div class="particles" id="particles"></div>
+
+<nav>
+  <div class="logo"><img src="https://i.imgur.com/uEQ9ZAr.png" alt="antgold"> AntGold</div>
+  <ul>
+    <li><a href="#staking">Staking</a></li>
+    <li><a href="#tiers">Paliers</a></li>
+    <li><a href="#tokenomics">Tokenomics</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <button class="nav-btn" id="walletConnectBtn">Connecter Wallet</button>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">Solana • SPL Token • Staking Protocol</div>
+  <img src="https://i.imgur.com/uEQ9ZAr.png" class="hero-icon" alt="antgold emblem">
+  <h1><span class="g">AntGold</span><br>Stake & Earn</h1>
+  <p class="hero-sub">Comme la fourmi qui accumule chaque jour, ton argent travaille pendant que tu dors. Stake $ANTG et gagne jusqu'à <strong style="color:var(--gold)">90$/mois.</strong></p>
+  <div class="hero-btns">
+    <a href="#staking" class="btn-gold">🐜 Commencer à staker</a>
+    <a href="#tiers" class="btn-ghost">Voir les paliers</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span class="stat-v">1B</span><span class="stat-l">Supply $ANTG</span></div>
+  <div class="stat"><span class="stat-v">0.001$</span><span class="stat-l">Prix lancement</span></div>
+  <div class="stat"><span class="stat-v">90$/mois</span><span class="stat-l">Gain maximum</span></div>
+  <div class="stat"><span class="stat-v">x3</span><span class="stat-l">Multiplicateur max</span></div>
+</div>
+
+<section id="tiers">
+  <div class="s-tag">// Paliers de récompense</div>
+  <h2>Plus tu restes,<br>plus tu gagnes.</h2>
+  <p style="color:var(--muted); max-width:500px; margin-bottom:2rem;">Système Time-Weighted récompense la fidélité.</p>
+  <div class="tiers">
+    <div class="tier"><div class="tier-dur">1 — 7 jours</div><div class="tier-mult">x1</div><div class="tier-earn">1$/jour — 30$/mois</div><div class="tier-desc">Stake 25,000 $ANTG, début du voyage.</div></div>
+    <div class="tier"><div class="tier-dur">7 — 30 jours</div><div class="tier-mult">x1.5</div><div class="tier-earn">1.50$/jour — 45$/mois</div><div class="tier-desc">La fourmi prend de la force +50%.</div></div>
+    <div class="tier best"><div class="tier-badge">Populaire</div><div class="tier-dur">30 — 90 jours</div><div class="tier-mult">x2</div><div class="tier-earn">2$/jour — 60$/mois</div><div class="tier-desc">Membre confirmé, récompenses doublées.</div></div>
+    <div class="tier"><div class="tier-badge" style="background:var(--mauve);">Élite</div><div class="tier-dur">90+ jours</div><div class="tier-mult">x3</div><div class="tier-earn">3$/jour — 90$/mois 🔥</div><div class="tier-desc">Tribu d'élite, récompenses triplées.</div></div>
+  </div>
+</section>
+
+<section style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="s-tag">// Comment ça marche</div>
+  <h2>Simple comme<br>une fourmi.</h2>
+  <div class="steps">
+    <div class="step"><div class="step-icon">💰</div><h3>Achète $ANTG</h3><p>Achète sur Raydium avec Phantom, ou carte via RedotPay. 25,000 ANTG = 25$.</p></div>
+    <div class="step"><div class="step-icon">🔒</div><h3>Stake tes tokens</h3><p>Connecte ton wallet et dépose tes $ANTG. Le compteur commence immédiatement.</p></div>
+    <div class="step"><div class="step-icon">🐜</div><h3>Accumule chaque jour</h3><p>Réclame tes gains une fois par jour. L'accumulation est automatique.</p></div>
+  </div>
+</section>
+
+<section id="staking">
+  <div class="s-tag">// Simulateur de gains</div>
+  <h2>Calcule tes<br>récompenses.</h2>
+  <div class="app-grid">
+    <div class="app-card">
+      <div class="input-group"><label class="input-label">Montant à investir ($)</label><input type="number" id="stakeAmount" class="input-field" value="25" step="1" min="1"></div>
+      <div class="input-group"><label class="input-label">Durée de staking</label><select id="duration" class="input-field"><option value="1">1-7j (x1)</option><option value="1.5">7-30j (x1.5)</option><option value="2" selected>30-90j (x2)</option><option value="3">90+ jours (x3) 🔥</option></select></div>
+      <div class="calc-result">
+        <div class="calc-row"><span class="calc-lbl">Valeur stakée</span><span id="r-val" class="calc-val">25$ (25,000 ANTG)</span></div>
+        <div class="calc-row"><span class="calc-lbl">Gain par jour</span><span id="r-day" class="calc-val">2.00$/jour</span></div>
+        <div class="calc-row"><span class="calc-lbl">Gain par mois</span><span id="r-month" class="calc-val big">60$/mois</span></div>
+        <div class="calc-row"><span class="calc-lbl">Gain par an</span><span id="r-year" class="calc-val">730$/an</span></div>
+      </div>
+    </div>
+    <div><h3 style="font-family:'Cinzel',serif; font-size:1.8rem; color:var(--gold);">Investis 25$.<br>Gagne 90$/mois.</h3><p style="color:var(--muted); margin:1rem 0 1.5rem;">La fourmi accumule chaque grain sans s'arrêter, comme ton capital dans $ANTG.</p><div>✓ Claim quotidien<br>✓ Pénalité 0% après 90j<br>✓ Smart contract public<br>✓ Supply fixe 1B</div></div>
+  </div>
+</section>
+
+<section id="tokenomics" style="background:var(--surface); border-top:1px solid var(--border);">
+  <div class="s-tag">// Distribution</div>
+  <h2>Tokenomics</h2>
+  <div class="tknomics">
+    <ul class="tknomics-list">
+      <li class="tknomics-item"><span class="tknomics-dot" style="background:var(--gold)"></span><span class="tknomics-lbl">Réserve Staking / Rewards</span><span class="tknomics-pct">40%</span></li>
+      <li class="tknomics-item"><span class="tknomics-dot" style="background:var(--mauve)"></span><span class="tknomics-lbl">Fondateur (verrouillé 12 mois)</span><span class="tknomics-pct">20%</span></li>
+      <li class="tknomics-item"><span class="tknomics-dot" style="background:#60a5fa"></span><span class="tknomics-lbl">Liquidité DEX (Raydium)</span><span class="tknomics-pct">20%</span></li>
+      <li class="tknomics-item"><span class="tknomics-dot" style="background:#f87171"></span><span class="tknomics-lbl">Communauté / Airdrops</span><span class="tknomics-pct">15%</span></li>
+      <li class="tknomics-item"><span class="tknomics-dot" style="background:#34d399"></span><span class="tknomics-lbl">Développement</span><span class="tknomics-pct">5%</span></li>
+    </ul>
+    <div style="text-align:center;"><svg viewBox="0 0 200 200" width="240" height="240"><circle cx="100" cy="100" r="70" fill="none" stroke="#f0c040" stroke-width="28" stroke-dasharray="175.9 263.9" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="70" fill="none" stroke="#c084fc" stroke-width="28" stroke-dasharray="87.9 351.9" stroke-dashoffset="-175.9" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="70" fill="none" stroke="#60a5fa" stroke-width="28" stroke-dasharray="87.9 351.9" stroke-dashoffset="-263.9" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="70" fill="none" stroke="#f87171" stroke-width="28" stroke-dasharray="65.9 373.9" stroke-dashoffset="-351.9" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="56" fill="#160d20"/><text x="100" y="100" text-anchor="middle" fill="#f0c040" font-size="16" font-weight="bold">1B</text></svg></div>
+  </div>
+</section>
+
+<section>
+  <div class="s-tag">// Transparence & Sécurité</div>
+  <h2>Pourquoi faire confiance à AntGold ?</h2>
+  <div class="security-grid">
+    <div class="security-card">🔍 Smart Contract Public<br><span style="font-size:0.7rem;">Vérifiable sur Solana Explorer</span></div>
+    <div class="security-card">🔒 Supply Fixe<br><span style="font-size:0.7rem;">Mint authority révoquée</span></div>
+    <div class="security-card">⏰ Fondateur Verrouillé<br><span style="font-size:0.7rem;">12 mois locked</span></div>
+    <div class="security-card">🛡️ Pause d'urgence<br><span style="font-size:0.7rem;">Sécurité maximale</span></div>
+    <div class="security-card">📊 Événements on-chain<br><span style="font-size:0.7rem;">Traçabilité totale</span></div>
+    <div class="security-card">⚠️ Avertissement honnête<br><span style="font-size:0.7rem;">Investis prudemment</span></div>
+  </div>
+</section>
+
+<section id="faq" style="background:var(--surface);">
+  <div class="s-tag">// Questions fréquentes</div>
+  <h2>FAQ</h2>
+  <div>
+    <div class="faq-item"><button class="faq-question">C'est quoi AntGold ($ANTG) ? <span>+</span></button><div class="faq-answer">AntGold est un token de staking sur Solana. Tu stakes $ANTG et gagnes des récompenses quotidiennes. Modèle inspiré de la fourmi : accumulation constante.</div></div>
+    <div class="faq-item"><button class="faq-question">Comment acheter $ANTG ? <span>+</span></button><div class="faq-answer">Achetez sur Raydium avec Phantom, ou via RedotPay (carte bancaire). Prix initial 0.001$.</div></div>
+    <div class="faq-item"><button class="faq-question">Puis-je perdre mes tokens stakés ? <span>+</span></button><div class="faq-answer">Tes tokens sont dans le smart contract, inaccessibles même par l’équipe. Pénalité de 10% si unstake avant 30j, 0% après 90j.</div></div>
+    <div class="faq-item"><button class="faq-question">Comment réclamer mes gains ? <span>+</span></button><div class="faq-answer">Une fois par jour via le dashboard. Les rewards sont envoyés directement dans ton wallet Phantom.</div></div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="s-tag">// Feuille de route</div>
+  <h2>Roadmap</h2>
+  <div class="roadmap-line">
+    <div class="roadmap-item"><span style="width:100px; font-size:0.7rem;">Phase 1</span><div><strong>Création du token</strong><br>Déploiement 1B $ANTG, mint authority révoquée</div></div>
+    <div class="roadmap-item"><span style="width:100px; font-size:0.7rem;">Phase 2</span><div><strong>Smart Contract Staking</strong><br>Multiplicateurs x1 à x3, pénalités et bonus</div></div>
+    <div class="roadmap-item"><span style="width:100px; font-size:0.7rem;">Phase 3</span><div><strong>Liquidité DEX</strong><br>Pool ANTG/SOL sur Raydium</div></div>
+    <div class="roadmap-item"><span style="width:100px; font-size:0.7rem;">Phase 4</span><div><strong>RedotPay & carte bancaire</strong><br>Achat direct ANTG avec Visa/Mastercard</div></div>
+    <div class="roadmap-item"><span style="width:100px; font-size:0.7rem;">Phase 5</span><div><strong>CoinGecko & communauté</strong><br>Airdrops, signaux exclusifs</div></div>
+  </div>
+</section>
+
+<section class="cta-section" style="text-align:center; background:linear-gradient(135deg, rgba(240,192,64,0.05), rgba(192,132,252,0.05));">
+  <div class="s-tag">// Rejoins la colonie</div>
+  <h2>La fourmi n'attend pas.<br>Toi non plus.</h2>
+  <button class="btn-gold" id="ctaWalletBtn" style="margin-top:1rem;">🐜 Connecter Phantom & Staker</button>
+</section>
+
+<footer>
+  <div class="footer-logo">🐜 AntGold</div>
+  <div>CA : <span style="color:var(--gold)">Bientôt disponible</span></div>
+  <div>© 2025 AntGold. Tous droits réservés.</div>
+</footer>
+
+<script>
+  // ---- custom cursor ----
+  const cursor = document.getElementById('cur');
+  const cursor2 = document.getElementById('cur2');
+  let mouseX = 0, mouseY = 0;
+  let curX = 0, curY = 0;
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    cursor.style.left = mouseX - 4 + 'px';
+    cursor.style.top = mouseY - 4 + 'px';
+  });
+  function animateCursor() {
+    curX += (mouseX - curX) * 0.12;
+    curY += (mouseY - curY) * 0.12;
+    cursor2.style.left = curX - 18 + 'px';
+    cursor2.style.top = curY - 18 + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // ---- floating particles ----
+  const partContainer = document.getElementById('particles');
+  for (let i = 0; i < 45; i++) {
+    let p = document.createElement('div');
+    p.classList.add('p');
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = 6 + Math.random() * 15 + 's';
+    p.style.animationDelay = Math.random() * 12 + 's';
+    p.style.width = p.style.height = 1 + Math.random() * 3 + 'px';
+    partContainer.appendChild(p);
+  }
+
+  // ---- calculator ----
+  const stakeInput = document.getElementById('stakeAmount');
+  const durationSelect = document.getElementById('duration');
+  const rValSpan = document.getElementById('r-val');
+  const rDaySpan = document.getElementById('r-day');
+  const rMonthSpan = document.getElementById('r-month');
+  const rYearSpan = document.getElementById('r-year');
+
+  function updateCalculator() {
+    let usd = parseFloat(stakeInput.value);
+    if (isNaN(usd) || usd < 1) usd = 1;
+    const mult = parseFloat(durationSelect.value);
+    const basePerDay = (usd / 25) * 1; // 25$ = 1$/jour base
+    const daily = basePerDay * mult;
+    const monthly = daily * 30;
+    const yearly = daily * 365;
+    const antgAmount = usd / 0.001;
+    rValSpan.innerText = `${usd.toFixed(2)}$ (${Math.floor(antgAmount).toLocaleString()} ANTG)`;
+    rDaySpan.innerText = `${daily.toFixed(2)}$/jour`;
+    rMonthSpan.innerText = `${monthly.toFixed(2)}$/mois`;
+    rYearSpan.innerText = `${yearly.toFixed(2)}$/an`;
+  }
+  stakeInput.addEventListener('input', updateCalculator);
+  durationSelect.addEventListener('change', updateCalculator);
+  updateCalculator();
+
+  // ---- faq toggle ----
+  const faqButtons = document.querySelectorAll('.faq-question');
+  faqButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const answer = btn.nextElementSibling;
+      const signSpan = btn.querySelector('span');
+      if (answer.style.display === 'block') {
+        answer.style.display = 'none';
+        signSpan.innerText = '+';
+      } else {
+        answer.style.display = 'block';
+        signSpan.innerText = '−';
+      }
+    });
+  });
+
+  // ---- wallet simulation (popup reminder) ----
+  function walletConnectAction() {
+    alert("🐜 Connexion Phantom simulée.\n\nDans la version finale, le wallet Phantom s'intégrerait via window.solana.\nIci, le design est prêt pour l'intégration mainnet !");
+  }
+  const walletBtns = document.querySelectorAll('#walletConnectBtn, #ctaWalletBtn');
+  walletBtns.forEach(btn => btn.addEventListener('click', walletConnectAction));
+
+  // ---- smooth scroll & animation observer ----
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const target = document.getElementById(targetId);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const fadeElements = document.querySelectorAll('.tier, .step, .security-card, .tknomics-item');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0px)';
+      }
+    });
+  }, { threshold: 0.1 });
+  fadeElements.forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.4s ease';
+    observer.observe(el);
+  });
+
+  // ---- final touch : logo bonus display ----
+  console.log("AntGold — colonie active");
+</script>
+</body>
+</html>
